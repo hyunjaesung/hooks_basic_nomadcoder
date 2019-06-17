@@ -3,25 +3,41 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
 
-const useInput = (initialValue) => {
+const useInput = (initialValue, validator) => {
 	const [ value, setValue ] = useState(initialValue);
 	const onChange = (event) => {
 		const { target: { value } } = event;
-		setValue(value);
+		// setValue(value);
+		// 조건 성립할때만 입력가능하게
+		let willUpdate = true;
+		if (typeof validator === 'function') {
+			// 일단 함수 맞는지 확인하고
+			willUpdate = validator(value);
+			// 조건 부합한지 확인
+		}
+		if (willUpdate) {
+			setValue(value);
+		}
 	};
 
 	return { value, onChange };
 };
 
 const App = () => {
-	const name = useInput('Mr.');
-	// 초기값을 이용한 첫번째 값과 두번째인 셋함수를 품고있는 onChange 함수를 name 안에 넣어줌
+	const maxLen = (value) => value.length <= 10;
+	// 조건함수 만들어준다, 10보다 적을때만 true
+	const sharp = (value) => value.includes('#');
+	// # 꼭필요 조건
+
+	const name = useInput('Mr.', maxLen);
+	const hashtag = useInput('', sharp);
+
 	return (
 		<div className="App">
 			<h1>Hello</h1>
 			<input placeholder="Name" value={name.value} onChange={name.onChange} />
-
 			{/* 그냥 ...name 쓰면 value ={..} onChange ={..} 대체가능  */}
+			<input placeholder="Hashtag" {...hashtag} />
 		</div>
 	);
 };
