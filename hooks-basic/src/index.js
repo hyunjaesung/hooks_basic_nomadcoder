@@ -2,45 +2,42 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
-import { callbackify } from "util";
 
-const useFullscreen = onFullS => {
-  const element = useRef();
+// 브라우저의 Notification API 사용
+const useNotification = (title, options) => {
+  if (!("Notification" in window)) {
+    // 윈도우에 있는 Notification API만 실행되야함
+    return;
+  }
 
-  const triggerFull = () => {
-    if (element.current) {
-      element.current.requestFullscreen();
-      //  브라우저에 요청 함수
-      if (onFullS && typeof onFullS === "function") {
-        onFullS(true); // true 반환
-      }
+  const fireNotif = () => {
+    if (Notification.permission !== "granted") {
+      // 알림 허락 안되있으면
+      // 허락 요청
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          // 허락했으면
+          new Notification(title, options); // 이제는 알림
+        } else {
+          // 아니면
+          return; // 걍종료
+        }
+      });
+    } else {
+      new Notification(title, options);
     }
   };
-  const exitFull = () => {
-    document.exitFullscreen();
-    // 이상하지만 원래 이리쓴다
-    if (onFullS && typeof onFullS === "function") {
-      onFullS(false); // false 반환
-    }
-  };
-
-  return { element, triggerFull, exitFull };
+  return fireNotif;
 };
 
 const App = () => {
-  const onFullS = isFullS => {
-    console.log(isFullS ? "We are Full" : "We are not full");
-  };
-
-  const { element, triggerFull, exitFull } = useFullscreen(onFullS);
+  const triggerNotif = useNotification("Can I love you?", {
+    body: "Can you love me?"
+  });
 
   return (
-    <div className="App" style={{ height: "4000px" }}>
-      <div ref={element}>
-        <img src="https://yt3.ggpht.com/a/AGF-l7-MAndAKQeGPRYBSvmImKM4r4075vRKnEwwIg=s88-mo-c-c0xffffffff-rj-k-no" />
-        <button onClick={triggerFull}>Make full screen</button>
-        <button onClick={exitFull}>Exit full screen</button>
-      </div>
+    <div className="App">
+      <button onClick={triggerNotif}>Hello</button>
     </div>
   );
 };
