@@ -2,42 +2,41 @@ import React, { useState, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import * as serviceWorker from "./serviceWorker";
+import defaultAxios from "axios";
 
-// 브라우저의 Notification API 사용
-const useNotification = (title, options) => {
-  if (!("Notification" in window)) {
-    // 윈도우에 있는 Notification API만 실행되야함
+const useAxios = (options, axios = defaultAxios) => {
+  // axios에는 커스텀 들어감 안원하면 그냥 디폴트로
+  const [state, setState] = useState({
+    loading: true,
+    error: null,
+    data: null
+  });
+
+  useEffect(() => {
+    axios(options).then(data => {
+      setState({
+        ...state,
+        loading: false,
+        data
+      }).catch(error => {
+        setState({ ...state, loading: false, error });
+      });
+    });
+  }, []);
+
+  if (!options.url) {
     return;
   }
 
-  const fireNotif = () => {
-    if (Notification.permission !== "granted") {
-      // 알림 허락 안되있으면
-      // 허락 요청
-      Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          // 허락했으면
-          new Notification(title, options); // 이제는 알림
-        } else {
-          // 아니면
-          return; // 걍종료
-        }
-      });
-    } else {
-      new Notification(title, options);
-    }
-  };
-  return fireNotif;
+  return state;
 };
 
 const App = () => {
-  const triggerNotif = useNotification("Can I love you?", {
-    body: "Can you love me?"
-  });
+  const { loading, data } = useAxios({ url: "" });
 
   return (
     <div className="App">
-      <button onClick={triggerNotif}>Hello</button>
+      <button>Hello</button>
     </div>
   );
 };
